@@ -46,13 +46,6 @@ import mpicbg.models.*;
  */
 @Plugin(type = MultiLandmark.class)
 public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
-    private int M_images_size = 0; // Number of eligible images
-    private ImageProcessor[] M_processors; // Their processors
-    private PointRoi[] M_rois; // Their point rois
-    // An array used to determine which image is "biggest".
-    // Each element is how many other images are "smaller" than the index
-    private int[] M_biggest_to;
-    private ArrayList<ModelData> M_data;
 
     // Inputs
     @Parameter private ImagePlus[] P_images;
@@ -70,17 +63,24 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
     @Parameter private UIService P_ui;
 
     @Override
-    public void run() {
-        init();
+    public void run()
+    {
+        int images_size = P_images.length;
+        ArrayList<ModelData> all_data =
+            new ArrayList<>(images_size * (images_size - 1));
+        P_output = new ImagePlus[images_size];
         P_status.showStatus("Calculating transforms...");
         // The index to scale to
         // If scaling to the biggest or the smallest image, this value will
         // change
         int index = P_scale_to;
         if (P_scale_to >= 0) {
-            for (int i = 0; i < M_images_size - 1; ++i) {
+            for (int i = 0; i < images_size - 1; ++i) {
                 if (i != P_scale_to) {
-                    try {M_data.add(new ModelData(i, P_scale_to));}
+                    try {
+                        all_data.add(new ModelData(P_images[i],
+                                                   P_images[P_scale_to]));
+                    }
                     catch (NotEnoughDataPointsException
                          | IllDefinedDataPointsException e) {
                         P_ui.showDialog("There are not enough data points to "
@@ -93,9 +93,18 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
         }
         // Either scaling to biggest or smallest
         else {
-            for (int i = 0; i < M_images_size - 1; ++i) {
-                for (int j = i + 1; j < M_images_size; ++j) {
-                    try {M_data.add(new ModelData(i, j));}
+            // An array used to determine which image is "biggest".  Each
+            // element is how many other images are "smaller" than the index
+            int[] biggest_to = new int[images_size];
+            for (int i = 0; i < images_size - 1; ++i) {
+                for (int j = i + 1; j < images_size; ++j) {
+                    try {
+                        ModelData data = new ModelData(P_images[i],
+                                                       P_images[j]);
+                        all_data.add(data);
+                        if (data.target() == P_images[i]) ++biggest_to[i];
+                        else ++biggest_to[j];
+                    }
                     catch (NotEnoughDataPointsException
                          | IllDefinedDataPointsException e) {
                         P_ui.showDialog("There are not enough data points to "
@@ -106,19 +115,20 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
                 }
             }
             int max = 0;
-            for (int i = 0; i < M_images_size; ++i) {
-                // M_biggest_to was set while creating M_data
-                if (M_biggest_to[i] > max) {
-                    max = M_biggest_to[i];
+            for (int i = 0; i < images_size; ++i) {
+                if (biggest_to[i] > max) {
+                    max = biggest_to[i];
                     index = i;
                 }
             }
         }
         P_status.showStatus("Performing transforms...");
         int i = 0;
-        for (ModelData d : M_data) {
+        for (ModelData d : all_data) {
             try {
-                P_output[i++] = d.try_transform(index);
+                if (d.target() == P_images[index]) {
+                    P_output[i++] = d.transform();
+                }
             }
             catch (NoninvertibleModelException e) {
                 P_ui.showDialog("The resulting transform was non-invertible.",
@@ -130,27 +140,14 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
         P_output[i] = new ImagePlus(P_images[index].getTitle() + " final",
                                         P_images[index].getStack());
     }
-    private void init()
-    {
-        M_images_size = P_images.length;
-        M_processors = new ImageProcessor[M_images_size];
-        M_rois = new PointRoi[M_images_size];
-        for (int i = 0; i < M_images_size; ++i) {
-            M_processors[i] = P_images[i].getProcessor();
-            M_rois[i] = (PointRoi)P_images[i].getRoi();
-        }
-        M_data = new ArrayList<ModelData>(M_images_size * (M_images_size - 1));
-        M_biggest_to = new int[M_images_size];
-        P_output = new ImagePlus[M_images_size];
-    }
     /* This class holds the models used to perform the transformations.
      * They store the model and the indices of the images that it transforms
      * from and to.  This class really does all of the work here.
      */
     private class ModelData {
         private AbstractAffineModel2D<?> M_model;
-        private int M_source; // Index of the source image in P_images
-        private int M_target; // Index of the target image in P_images
+        private ImagePlus M_source;
+        private ImagePlus M_target;
         private int M_source_width;
         private int M_source_height;
         private int M_target_width;
@@ -158,19 +155,19 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
         // This constructor initializes the model and sets M_source and M_target
         // to the correct values.  M_source and M_target might need to be
         // switched so that it is always scaling up.
-        public ModelData(int i, int j) throws NotEnoughDataPointsException,
-                                              IllDefinedDataPointsException
+        public ModelData(ImagePlus i, ImagePlus j)
+            throws NotEnoughDataPointsException, IllDefinedDataPointsException
         {
             M_source = i;
             M_target = j;
-            M_model = get_model(i, j);
+            M_model = get_model();
             double[] model_array = new double[6];
             M_model.toArray(model_array);
             double determinant = model_array[0] * model_array[3]
                                - model_array[1] * model_array[2];
             if (determinant < 1) {
                 M_model = M_model.createInverse();
-                int temp = M_source;
+                ImagePlus temp = M_source;
                 M_source = M_target;
                 M_target = temp;
             }
@@ -181,19 +178,22 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
                 //               "[" + model_array[2] + ", " + model_array[3] + "]\n" +
                 //               "[" + model_array[4] + ", " + model_array[5] + "]");
             }
-            M_source_width = P_images[M_source].getWidth();
-            M_source_height = P_images[M_source].getHeight();
-            M_target_width = P_images[M_target].getWidth();
-            M_target_height = P_images[M_target].getHeight();
-            ++M_biggest_to[M_target];
+            M_source_width = M_source.getWidth();
+            M_source_height = M_source.getHeight();
+            M_target_width = M_target.getWidth();
+            M_target_height = M_target.getHeight();
         }
+        public ImagePlus source() {return M_source;}
+        public ImagePlus target() {return M_target;}
         // Acquire the model for transforming the image at index id1 to id2
-        private AbstractAffineModel2D<?> get_model(int id1, int id2)
+        private AbstractAffineModel2D<?> get_model()
             throws NotEnoughDataPointsException, IllDefinedDataPointsException
         {
             ArrayList<PointMatch> matches = new ArrayList<PointMatch>();
-            List<Point> source_points = Util.pointRoiToPoints(M_rois[id1]);
-            List<Point> target_points = Util.pointRoiToPoints(M_rois[id2]);
+            List<Point> source_points
+                = Util.pointRoiToPoints((PointRoi)M_source.getRoi());
+            List<Point> target_points
+                = Util.pointRoiToPoints((PointRoi)M_target.getRoi());
             int max = Math.min(source_points.size(), target_points.size());
             for (int i = 0; i < max; ++i) {
                 matches.add(new PointMatch(source_points.get(i),
@@ -210,50 +210,47 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
                 throw new RuntimeException(e);
             }
         }
-        // Perform the transform if this object is transforming to index
-        public ImagePlus try_transform(int index)
+        // Perform the transform
+        public ImagePlus transform()
             throws NoninvertibleModelException
         {
-            if (M_target == index) {
-                int stack_size
-                    = Math.min(P_images[M_source].getImageStackSize(),
-                               P_images[M_target].getImageStackSize());
-                ImageStack result
-                    = new ImageStack(P_images[M_target].getWidth(),
-                                     P_images[M_target].getHeight());
-                for (int i = 0; i < stack_size; ++i) {
-                    if (stack_size > 1) {
-                        // Note that the status bar will reset multiple times
-                        // depending on how many ImagePluses you started with
-                        P_status.showStatus(i + 1, stack_size, "Transforming "
-                            + P_images[M_source].getTitle());
-                    }
-                    ImageProcessor source
-                        = P_images[M_source].getStack().getProcessor(i + 1);
-                    source.setInterpolationMethod(P_interpolation_method);
-                    ImageProcessor target
-                        = M_processors[M_target].createProcessor(
-                            P_images[M_target].getWidth(),
-                            P_images[M_target].getHeight()
-                        );
-                    final double[] t = new double[2];
-                    final float[][] pixels = source.getFloatArray();
-                    for (int y = 0; y < M_target_height; ++y) {
-                        for (int x = 0; x < M_target_width; ++x) {
-                            t[0] = x;
-                            t[1] = y;
-                            M_model.applyInverseInPlace(t);
-                            put_pixel(source, target, t[0], t[1], x, y, pixels);
-                        }
-                    }
-                    result.addSlice(P_images[M_source].getStack()
-                                                      .getSliceLabel(i + 1),
-                                    target);
+            int stack_size
+                = Math.min(M_source.getImageStackSize(),
+                           M_target.getImageStackSize());
+            ImageStack result
+                = new ImageStack(M_target.getWidth(),
+                                 M_target.getHeight());
+            for (int i = 0; i < stack_size; ++i) {
+                if (stack_size > 1) {
+                    // Note that the status bar will reset multiple times
+                    // depending on how many ImagePluses you started with
+                    P_status.showStatus(i + 1, stack_size, "Transforming "
+                        + M_source.getTitle());
                 }
-                return new ImagePlus(P_images[M_source].getTitle() + " final",
-                                     result);
+                ImageProcessor source
+                    = M_source.getStack().getProcessor(i + 1);
+                source.setInterpolationMethod(P_interpolation_method);
+                ImageProcessor target
+                    = M_target.getProcessor().createProcessor(
+                        M_target.getWidth(),
+                        M_target.getHeight()
+                    );
+                final double[] t = new double[2];
+                final float[][] pixels = source.getFloatArray();
+                for (int y = 0; y < M_target_height; ++y) {
+                    for (int x = 0; x < M_target_width; ++x) {
+                        t[0] = x;
+                        t[1] = y;
+                        M_model.applyInverseInPlace(t);
+                        put_pixel(source, target, t[0], t[1], x, y, pixels);
+                    }
+                }
+                result.addSlice(M_source.getStack()
+                                                  .getSliceLabel(i + 1),
+                                target);
             }
-            return null;
+            return new ImagePlus(M_source.getTitle() + " final",
+                                 result);
         }
         /* Puts the pixel from source at (sx, sy) on target at (tx, ty), taking
          * into acount any interpolation complications necessary.
