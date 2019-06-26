@@ -41,7 +41,7 @@ import org.scijava.ui.UIService;
 import org.scijava.ui.UserInterface;
 import org.scijava.object.ObjectService;
 
-@Plugin(type = Command.class, menuPath = "Plugins>Multi-Image Landmark Correspondences")
+@Plugin(type = Command.class, menuPath = "Plugins > Transform > Multi-Image Landmark Correspondences")
 public class MultiLandmarkCommand extends ContextCommand {
     @Parameter
     private ConvertService P_converter;

@@ -168,10 +168,10 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
             }
             {
                 M_model.toArray(model_array);
-                IJ.showMessage("" + i + "->" + j + "\n" +
-                               "[" + model_array[0] + ", " + model_array[1] + "]\n" +
-                               "[" + model_array[2] + ", " + model_array[3] + "]\n" +
-                               "[" + model_array[4] + ", " + model_array[5] + "]");
+                //IJ.showMessage("" + i + "->" + j + "\n" +
+                //               "[" + model_array[0] + ", " + model_array[1] + "]\n" +
+                //               "[" + model_array[2] + ", " + model_array[3] + "]\n" +
+                //               "[" + model_array[4] + ", " + model_array[5] + "]");
             }
             M_source_width = P_images[M_source].getWidth();
             M_source_height = P_images[M_source].getHeight();
