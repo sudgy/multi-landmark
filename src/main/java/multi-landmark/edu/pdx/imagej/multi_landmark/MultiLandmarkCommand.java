@@ -31,6 +31,8 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 
+import mpicbg.models.*;
+
 @Plugin(type = Command.class, menuPath = "Plugins > Transform > Multi-Image Landmark Correspondences")
 public class MultiLandmarkCommand implements Command {
     @Parameter
@@ -92,6 +94,7 @@ public class MultiLandmarkCommand implements Command {
         ImagePlus[] result = (ImagePlus[])P_ops.run(MultiLandmark.class,
                                                     final_images,
                                                     interpolation_type,
+                                                    SimilarityModel2D.class,
                                                     P_stop_interpolation,
                                                     P_discontinuity_threshold,
                                                     -1);

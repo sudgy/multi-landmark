@@ -19,6 +19,7 @@
 
 package edu.pdx.imagej.multi_landmark;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,10 +36,7 @@ import org.scijava.app.StatusService;
 import org.scijava.ui.UIService;
 
 import mpicbg.ij.util.Util;
-import mpicbg.models.Point;
-import mpicbg.models.PointMatch;
-import mpicbg.models.SimilarityModel2D;
-import mpicbg.models.NotEnoughDataPointsException;
+import mpicbg.models.*;
 
 /**
  * This is the default implementation of the MultiLandmark Op.
@@ -60,6 +58,8 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
     private ImagePlus[] P_images;
     @Parameter
     private int P_interpolation_method;
+    @Parameter
+    private Class<? extends AbstractAffineModel2D<?>> P_model_type;
     @Parameter
     private boolean P_stop_interpolation;
     @Parameter
@@ -89,7 +89,7 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
             for (int i = 0; i < M_images_size - 1; ++i) {
                 if (i != P_scale_to) {
                     try {M_data.add(new ModelData(i, P_scale_to));}
-                    catch (NotEnoughDataPointsException e) {
+                    catch (NotEnoughDataPointsException | IllDefinedDataPointsException e) {
                         P_ui.showDialog("There are not enough data points to determine a transform.", "Error");
                         P_output = null;
                         return;
@@ -102,7 +102,7 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
             for (int i = 0; i < M_images_size - 1; ++i) {
                 for (int j = i + 1; j < M_images_size; ++j) {
                     try {M_data.add(new ModelData(i, j));}
-                    catch (NotEnoughDataPointsException e) {
+                    catch (NotEnoughDataPointsException | IllDefinedDataPointsException e) {
                         P_ui.showDialog("There are not enough data points to determine a transform.", "Error");
                         P_output = null;
                         return;
@@ -120,7 +120,12 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
         }
         P_status.showStatus("Performing transforms...");
         for (ModelData d : M_data) {
-            d.try_transform(index);
+            try {d.try_transform(index);}
+            catch (NoninvertibleModelException e) {
+                P_ui.showDialog("The resulting transform was non-invertible.", "Error");
+                P_output = null;
+                return;
+            }
         }
         P_output[index] = new ImagePlus(P_images[index].getTitle() + " final", P_images[index].getStack());
     }
@@ -142,7 +147,7 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
      * from and to.  This class really does all of the work here.
      */
     private class ModelData {
-        private SimilarityModel2D M_model;
+        private AbstractAffineModel2D<?> M_model;
         private int M_source; // Index of the source image in P_images
         private int M_target; // Index of the target image in P_images
         private int M_source_width;
@@ -152,7 +157,7 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
         // This constructor initializes the model and sets M_source and M_target
         // to the correct values.  M_source and M_target might need to be
         // switched so that it is always scaling up.
-        public ModelData(int i, int j) throws NotEnoughDataPointsException
+        public ModelData(int i, int j) throws NotEnoughDataPointsException, IllDefinedDataPointsException
         {
             M_source = i;
             M_target = j;
@@ -180,7 +185,7 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
             ++M_biggest_to[M_target];
         }
         // Acquire the model for transforming the image at index id1 to id2
-        private SimilarityModel2D get_model(int id1, int id2) throws NotEnoughDataPointsException
+        private AbstractAffineModel2D<?> get_model(int id1, int id2) throws NotEnoughDataPointsException, IllDefinedDataPointsException
         {
             ArrayList<PointMatch> matches = new ArrayList<PointMatch>();
             List<Point> source_points = Util.pointRoiToPoints(M_rois[id1]);
@@ -189,12 +194,17 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
             for (int i = 0; i < max; ++i) {
                 matches.add(new PointMatch(source_points.get(i), target_points.get(i)));
             }
-            SimilarityModel2D model = new SimilarityModel2D();
-            model.fit(matches);
-            return model;
+            try {
+                AbstractAffineModel2D<?> model = P_model_type.getConstructor().newInstance();
+                model.fit(matches);
+                return model;
+            }
+            catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
         }
         // Perform the transform if this object is transforming to index
-        public void try_transform(int index)
+        public void try_transform(int index) throws NoninvertibleModelException
         {
             if (M_target == index) {
                 int stack_size = Math.min(P_images[M_source].getImageStackSize(), P_images[M_target].getImageStackSize());
