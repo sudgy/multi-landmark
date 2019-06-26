@@ -114,10 +114,11 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
                     }
                 }
             }
-            int max = 0;
+            int val = 0;
             for (int i = 0; i < images_size; ++i) {
-                if (biggest_to[i] > max) {
-                    max = biggest_to[i];
+                if ( (P_scale_to == -1 && biggest_to[i] > val) ||
+                     (P_scale_to == -2 && biggest_to[i] < val) ) {
+                    val = biggest_to[i];
                     index = i;
                 }
             }
@@ -185,7 +186,8 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
         }
         public ImagePlus source() {return M_source;}
         public ImagePlus target() {return M_target;}
-        // Acquire the model for transforming the image at index id1 to id2
+        // Acquire the model for transforming the image from M_source to
+        // M_target
         private AbstractAffineModel2D<?> get_model()
             throws NotEnoughDataPointsException, IllDefinedDataPointsException
         {
