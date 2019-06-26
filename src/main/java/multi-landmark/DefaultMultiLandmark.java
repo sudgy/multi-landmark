@@ -22,11 +22,11 @@ package edu.pdx.imagej.multi_landmark;
 import java.util.ArrayList;
 import java.util.List;
 
-import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.ImageProcessor;
 import ij.gui.PointRoi;
+
 import net.imagej.ops.AbstractOp;
 import org.scijava.ItemIO;
 import org.scijava.plugin.Parameter;

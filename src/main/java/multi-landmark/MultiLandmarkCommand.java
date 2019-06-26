@@ -19,34 +19,20 @@
 
 package edu.pdx.imagej.multi_landmark;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ij.WindowManager;
 import ij.ImagePlus;
 import ij.process.ImageProcessor;
 import ij.gui.Roi;
 import ij.gui.PointRoi;
-import net.imagej.ImageJ;
-import net.imagej.Dataset;
-import net.imagej.DatasetService;
+
 import net.imagej.ops.OpService;
-import org.scijava.command.ContextCommand;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.Context;
-import org.scijava.convert.ConvertService;
 import org.scijava.ui.UIService;
-import org.scijava.ui.UserInterface;
-import org.scijava.object.ObjectService;
 
 @Plugin(type = Command.class, menuPath = "Plugins > Transform > Multi-Image Landmark Correspondences")
-public class MultiLandmarkCommand extends ContextCommand {
-    @Parameter
-    private ConvertService P_converter;
-    @Parameter
-    private DatasetService P_dataset_service;
+public class MultiLandmarkCommand implements Command {
     @Parameter
     private UIService P_ui;
     @Parameter
@@ -61,8 +47,6 @@ public class MultiLandmarkCommand extends ContextCommand {
     @Override
     public void run()
     {
-        // I couldn't get DatasetService to actually get me all the images for
-        // some reason
         int[] ids = WindowManager.getIDList();
         if (ids == null) {
             P_ui.showDialog("There must be at least two images open that have point rois", "Error");
