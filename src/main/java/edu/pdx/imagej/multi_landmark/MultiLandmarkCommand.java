@@ -36,10 +36,8 @@ import mpicbg.models.*;
 @Plugin(type = Command.class,
         menuPath = "Plugins > Transform > Multi-Image Landmark Correspondences")
 public class MultiLandmarkCommand implements Command {
-    @Parameter
-    private UIService P_ui;
-    @Parameter
-    private OpService P_ops;
+    @Parameter private UIService P_ui;
+    @Parameter private OpService P_ops;
 
     @Parameter(label = "Interpolation Type",
                choices = {"None", "Nearest Neighbor", "Bilinear", "Bicubic"})

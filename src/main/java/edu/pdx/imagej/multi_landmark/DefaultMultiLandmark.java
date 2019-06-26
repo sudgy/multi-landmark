@@ -55,28 +55,19 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
     private ArrayList<ModelData> M_data;
 
     // Inputs
-    @Parameter
-    private ImagePlus[] P_images;
-    @Parameter
-    private int P_interpolation_method;
-    @Parameter
-    private Class<? extends AbstractAffineModel2D<?>> P_model_type;
-    @Parameter
-    private boolean P_stop_interpolation;
-    @Parameter
-    private float P_discontinuity_threshold;
-    @Parameter
-    private int P_scale_to;
+    @Parameter private ImagePlus[] P_images;
+    @Parameter private int P_interpolation_method;
+    @Parameter private Class<? extends AbstractAffineModel2D<?>> P_model_type;
+    @Parameter private boolean P_stop_interpolation;
+    @Parameter private float P_discontinuity_threshold;
+    @Parameter private int P_scale_to;
 
     // Outputs
-    @Parameter(type = ItemIO.OUTPUT)
-    private ImagePlus[] P_output;
+    @Parameter(type = ItemIO.OUTPUT) private ImagePlus[] P_output;
 
     // Others
-    @Parameter
-    private StatusService P_status;
-    @Parameter
-    private UIService P_ui;
+    @Parameter private StatusService P_status;
+    @Parameter private UIService P_ui;
 
     @Override
     public void run() {
