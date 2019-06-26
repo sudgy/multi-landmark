@@ -33,14 +33,16 @@ import org.scijava.ui.UIService;
 
 import mpicbg.models.*;
 
-@Plugin(type = Command.class, menuPath = "Plugins > Transform > Multi-Image Landmark Correspondences")
+@Plugin(type = Command.class,
+        menuPath = "Plugins > Transform > Multi-Image Landmark Correspondences")
 public class MultiLandmarkCommand implements Command {
     @Parameter
     private UIService P_ui;
     @Parameter
     private OpService P_ops;
 
-    @Parameter(label = "Interpolation Type", choices={"None", "Nearest Neighbor", "Bilinear", "Bicubic"})
+    @Parameter(label = "Interpolation Type",
+               choices = {"None", "Nearest Neighbor", "Bilinear", "Bicubic"})
     private String P_interpolation_type = "Bilinear";
     @Parameter(label = "Suppress interpolation at discontinuities")
     private boolean P_stop_interpolation = true;
@@ -51,7 +53,8 @@ public class MultiLandmarkCommand implements Command {
     {
         int[] ids = WindowManager.getIDList();
         if (ids == null) {
-            P_ui.showDialog("There must be at least two images open that have point rois", "Error");
+            P_ui.showDialog("There must be at least two images open that have "
+                + "point rois", "Error");
             return;
         }
         int final_size = 0;
@@ -64,7 +67,8 @@ public class MultiLandmarkCommand implements Command {
             }
         }
         if (final_size <= 1) {
-            P_ui.showDialog("There must be at least two images open that have point rois");
+            P_ui.showDialog("There must be at least two images open that have "
+                + "point rois");
             return;
         }
         ImagePlus[] final_images = new ImagePlus[final_size];
