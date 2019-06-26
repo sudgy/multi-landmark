@@ -26,6 +26,7 @@ import ij.gui.Roi;
 import ij.gui.PointRoi;
 
 import net.imagej.ops.OpService;
+import org.scijava.Initializable;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -35,17 +36,16 @@ import mpicbg.models.*;
 
 @Plugin(type = Command.class,
         menuPath = "Plugins > Transform > Multi-Image Landmark Correspondences")
-public class MultiLandmarkCommand implements Command {
+public class MultiLandmarkCommand implements Command, Initializable {
     @Parameter private UIService P_ui;
     @Parameter private OpService P_ops;
 
-    @Parameter(label = "Interpolation Type",
-               choices = {"None", "Nearest Neighbor", "Bilinear", "Bicubic"})
-    private String P_interpolation_type = "Bilinear";
-    @Parameter(label = "Suppress interpolation at discontinuities")
-    private boolean P_stop_interpolation = true;
-    @Parameter(label = "Discontinuity threshold", min = "0")
-    private float P_discontinuity_threshold = 128;
+    @Parameter private InterpolationParameter P_interpolation;
+    @Override
+    public void initialize()
+    {
+        P_interpolation = new InterpolationParameter();
+    }
     @Override
     public void run()
     {
@@ -81,25 +81,15 @@ public class MultiLandmarkCommand implements Command {
             }
         }
 
-        int interpolation_type = ImageProcessor.NONE;
-        switch (P_interpolation_type) {
-            case "Nearest Neighbor":
-                interpolation_type = ImageProcessor.NEAREST_NEIGHBOR;
-                break;
-            case "Bilinear":
-                interpolation_type = ImageProcessor.BILINEAR;
-                break;
-            case "Bicubic":
-                interpolation_type = ImageProcessor.BICUBIC;
-                break;
-        }
-        ImagePlus[] result = (ImagePlus[])P_ops.run(MultiLandmark.class,
-                                                    final_images,
-                                                    interpolation_type,
-                                                    SimilarityModel2D.class,
-                                                    P_stop_interpolation,
-                                                    P_discontinuity_threshold,
-                                                    -1);
+        InterpolationOptions interp = P_interpolation.get_value();
+        ImagePlus[] result = (ImagePlus[])P_ops.run(
+            MultiLandmark.class,
+            final_images,
+            interp.type,
+            SimilarityModel2D.class,
+            interp.stop_at_discontinuity,
+            interp.discontinuity_threshold,
+            -1);
         if (result == null) return;
         for (ImagePlus imp : result) imp.show();
     }
