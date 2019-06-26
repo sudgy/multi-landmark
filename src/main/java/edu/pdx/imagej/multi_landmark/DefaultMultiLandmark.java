@@ -115,8 +115,11 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
             }
         }
         P_status.showStatus("Performing transforms...");
+        int i = 0;
         for (ModelData d : M_data) {
-            try {d.try_transform(index);}
+            try {
+                P_output[i++] = d.try_transform(index);
+            }
             catch (NoninvertibleModelException e) {
                 P_ui.showDialog("The resulting transform was non-invertible.",
                                 "Error");
@@ -124,7 +127,7 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
                 return;
             }
         }
-        P_output[index] = new ImagePlus(P_images[index].getTitle() + " final",
+        P_output[i] = new ImagePlus(P_images[index].getTitle() + " final",
                                         P_images[index].getStack());
     }
     private void init()
@@ -208,7 +211,8 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
             }
         }
         // Perform the transform if this object is transforming to index
-        public void try_transform(int index) throws NoninvertibleModelException
+        public ImagePlus try_transform(int index)
+            throws NoninvertibleModelException
         {
             if (M_target == index) {
                 int stack_size
@@ -246,12 +250,12 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
                                                       .getSliceLabel(i + 1),
                                     target);
                 }
-                P_output[M_source] = new ImagePlus(P_images[M_source].getTitle()
-                    + " final", result);
+                return new ImagePlus(P_images[M_source].getTitle() + " final",
+                                     result);
             }
+            return null;
         }
-        /*
-         * Puts the pixel from source at (sx, sy) on target at (tx, ty), taking
+        /* Puts the pixel from source at (sx, sy) on target at (tx, ty), taking
          * into acount any interpolation complications necessary.
          *
          * source: ImageProcessor to source from (interpolation method
