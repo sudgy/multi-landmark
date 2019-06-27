@@ -34,6 +34,8 @@ import org.scijava.ui.UIService;
 
 import mpicbg.models.*;
 
+import edu.pdx.imagej.dynamic_parameters.ChoiceParameter;
+
 @Plugin(type = Command.class,
         menuPath = "Plugins > Transform > Multi-Image Landmark Correspondences")
 public class MultiLandmarkCommand implements Command, Initializable {
@@ -42,11 +44,15 @@ public class MultiLandmarkCommand implements Command, Initializable {
 
     @Parameter private InterpolationParameter P_interpolation;
     @Parameter private ScaleParameter         P_scale;
+    @Parameter private ChoiceParameter        P_transform_type;
     @Override
     public void initialize()
     {
         P_interpolation = new InterpolationParameter();
         P_scale         = new ScaleParameter();
+        String[] choices = {"Translation", "Rigid", "Similarity", "Affine"};
+        P_transform_type = new ChoiceParameter("Transform Type", choices,
+                                               "Similarity");
     }
     @Override
     public void run()
@@ -85,6 +91,21 @@ public class MultiLandmarkCommand implements Command, Initializable {
 
         InterpolationOptions interp = P_interpolation.get_value();
         ScaleOptions scale = P_scale.get_value();
+        Class<? extends AbstractAffineModel2D<?>> model_type = null;
+        switch (P_transform_type.get_value()) {
+            case "Translation":
+                model_type = TranslationModel2D.class;
+                break;
+            case "Rigid":
+                model_type = RigidModel2D.class;
+                break;
+            case "Similarity":
+                model_type = SimilarityModel2D.class;
+                break;
+            case "Affine":
+                model_type = AffineModel2D.class;
+                break;
+        }
         int to = -1;
         switch (scale.to) {
             case Biggest:
@@ -106,7 +127,7 @@ public class MultiLandmarkCommand implements Command, Initializable {
             MultiLandmark.class,
             final_images,
             interp.type,
-            SimilarityModel2D.class,
+            model_type,
             interp.stop_at_discontinuity,
             interp.discontinuity_threshold,
             to);
