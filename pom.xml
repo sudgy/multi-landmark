@@ -7,7 +7,7 @@
 
     <groupId>edu.pdx.imagej</groupId>
     <artifactId>multi_landmark</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1</version>
 
     <name>Multi-Image Landmark Correspondences</name>
     <description>This plugin transforms any number of images based on their Point ROIs similar to the Landmark Correspondences plugin.</description>
