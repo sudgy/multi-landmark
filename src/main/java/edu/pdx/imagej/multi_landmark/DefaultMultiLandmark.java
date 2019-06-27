@@ -75,7 +75,7 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
         // change
         int index = P_scale_to;
         if (P_scale_to >= 0) {
-            for (int i = 0; i < images_size - 1; ++i) {
+            for (int i = 0; i < images_size; ++i) {
                 if (i != P_scale_to) {
                     try {
                         all_data.add(new ModelData(P_images[i],
@@ -93,8 +93,9 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
         }
         // Either scaling to biggest or smallest
         else {
-            // An array used to determine which image is "biggest".  Each
-            // element is how many other images are "smaller" than the index
+            // An array used to determine which image is "biggest" (or
+            // smallest).  Each element is how many other images are "smaller"
+            // (bigger) than the index
             int[] biggest_to = new int[images_size];
             for (int i = 0; i < images_size - 1; ++i) {
                 for (int j = i + 1; j < images_size; ++j) {
@@ -116,8 +117,7 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
             }
             int val = 0;
             for (int i = 0; i < images_size; ++i) {
-                if ( (P_scale_to == -1 && biggest_to[i] > val) ||
-                     (P_scale_to == -2 && biggest_to[i] < val) ) {
+                if (biggest_to[i] > val) {
                     val = biggest_to[i];
                     index = i;
                 }
@@ -138,8 +138,8 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
                 return;
             }
         }
-        P_output[i] = new ImagePlus(P_images[index].getTitle() + " final",
-                                        P_images[index].getStack());
+        P_output[i] = P_images[index].duplicate();
+        P_output[i].setTitle(P_images[index].getTitle() + " final");
     }
     /* This class holds the models used to perform the transformations.
      * They store the model and the indices of the images that it transforms
@@ -166,7 +166,8 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
             M_model.toArray(model_array);
             double determinant = model_array[0] * model_array[3]
                                - model_array[1] * model_array[2];
-            if (determinant < 1) {
+            if ( (P_scale_to == -1 && determinant < 1) ||
+                 (P_scale_to == -2 && determinant > 1) ) {
                 M_model = M_model.createInverse();
                 ImagePlus temp = M_source;
                 M_source = M_target;

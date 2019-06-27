@@ -41,10 +41,12 @@ public class MultiLandmarkCommand implements Command, Initializable {
     @Parameter private OpService P_ops;
 
     @Parameter private InterpolationParameter P_interpolation;
+    @Parameter private ScaleParameter         P_scale;
     @Override
     public void initialize()
     {
         P_interpolation = new InterpolationParameter();
+        P_scale         = new ScaleParameter();
     }
     @Override
     public void run()
@@ -82,6 +84,24 @@ public class MultiLandmarkCommand implements Command, Initializable {
         }
 
         InterpolationOptions interp = P_interpolation.get_value();
+        ScaleOptions scale = P_scale.get_value();
+        int to = -1;
+        switch (scale.to) {
+            case Biggest:
+                to = -1;
+                break;
+            case Smallest:
+                to = -2;
+                break;
+            case Specific:
+                for (i = 0; i < final_images.length; ++i) {
+                    if (final_images[i] == scale.specific_image) {
+                        to = i;
+                        break;
+                    }
+                }
+                break;
+        }
         ImagePlus[] result = (ImagePlus[])P_ops.run(
             MultiLandmark.class,
             final_images,
@@ -89,7 +109,7 @@ public class MultiLandmarkCommand implements Command, Initializable {
             SimilarityModel2D.class,
             interp.stop_at_discontinuity,
             interp.discontinuity_threshold,
-            -1);
+            to);
         if (result == null) return;
         for (ImagePlus imp : result) imp.show();
     }
