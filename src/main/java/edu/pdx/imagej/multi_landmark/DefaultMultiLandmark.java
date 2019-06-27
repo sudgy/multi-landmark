@@ -23,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.ImageProcessor;
@@ -54,6 +55,7 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
     @Parameter private boolean P_stop_interpolation;
     @Parameter private float P_discontinuity_threshold;
     @Parameter private int P_scale_to;
+    @Parameter private boolean P_show_matrices;
 
     // Outputs
     @Parameter(type = ItemIO.OUTPUT) private ImagePlus[] P_output;
@@ -173,12 +175,13 @@ public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {
                 M_source = M_target;
                 M_target = temp;
             }
-            {
+            if (P_show_matrices) {
                 M_model.toArray(model_array);
-                //IJ.showMessage("" + i + "->" + j + "\n" +
-                //               "[" + model_array[0] + ", " + model_array[1] + "]\n" +
-                //               "[" + model_array[2] + ", " + model_array[3] + "]\n" +
-                //               "[" + model_array[4] + ", " + model_array[5] + "]");
+                IJ.log("Transforming from " + M_source.getTitle() + " to "
+                    + M_target.getTitle() + " has the following matrix:\n"
+                    + "[" + model_array[0] + ", " + model_array[1] + "]\n"
+                    + "[" + model_array[2] + ", " + model_array[3] + "]\n"
+                    + "[" + model_array[4] + ", " + model_array[5] + "]");
             }
             M_source_width = M_source.getWidth();
             M_source_height = M_source.getHeight();

@@ -34,6 +34,7 @@ import org.scijava.ui.UIService;
 
 import mpicbg.models.*;
 
+import edu.pdx.imagej.dynamic_parameters.BoolParameter;
 import edu.pdx.imagej.dynamic_parameters.ChoiceParameter;
 
 @Plugin(type = Command.class,
@@ -45,6 +46,7 @@ public class MultiLandmarkCommand implements Command, Initializable {
     @Parameter private InterpolationParameter P_interpolation;
     @Parameter private ScaleParameter         P_scale;
     @Parameter private ChoiceParameter        P_transform_type;
+    @Parameter private BoolParameter          P_show_matrices;
     @Override
     public void initialize()
     {
@@ -53,6 +55,7 @@ public class MultiLandmarkCommand implements Command, Initializable {
         String[] choices = {"Translation", "Rigid", "Similarity", "Affine"};
         P_transform_type = new ChoiceParameter("Transform Type", choices,
                                                "Similarity");
+        P_show_matrices = new BoolParameter("Show Transform Matrices?", false);
     }
     @Override
     public void run()
@@ -130,7 +133,8 @@ public class MultiLandmarkCommand implements Command, Initializable {
             model_type,
             interp.stop_at_discontinuity,
             interp.discontinuity_threshold,
-            to);
+            to,
+            P_show_matrices.get_value());
         if (result == null) return;
         for (ImagePlus imp : result) imp.show();
     }
