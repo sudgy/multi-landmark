@@ -19,7 +19,7 @@
 
 package edu.pdx.imagej.multi_landmark;
 
-public class InterpolationOptions {
+class InterpolationOptions {
     public int type;
     public boolean stop_at_discontinuity;
     public double discontinuity_threshold;

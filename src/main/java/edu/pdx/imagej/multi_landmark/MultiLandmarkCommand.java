@@ -37,6 +37,10 @@ import mpicbg.models.*;
 import edu.pdx.imagej.dynamic_parameters.BoolParameter;
 import edu.pdx.imagej.dynamic_parameters.ChoiceParameter;
 
+/** A command that runs {@link MultiLandmark}.
+ *
+ * @see DefaultMultiLandmark
+ */
 @Plugin(type = Command.class,
         menuPath = "Plugins > Transform > Multi-Image Landmark Correspondences")
 public class MultiLandmarkCommand implements Command, Initializable {

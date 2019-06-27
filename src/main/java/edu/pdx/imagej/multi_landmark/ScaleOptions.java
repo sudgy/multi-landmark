@@ -21,7 +21,7 @@ package edu.pdx.imagej.multi_landmark;
 
 import ij.ImagePlus;
 
-public class ScaleOptions {
+class ScaleOptions {
     public enum To {Biggest, Smallest, Specific}
     public To to;
     public ImagePlus specific_image;

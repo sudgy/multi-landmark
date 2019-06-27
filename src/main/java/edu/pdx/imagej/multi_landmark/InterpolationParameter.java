@@ -30,7 +30,7 @@ import edu.pdx.imagej.dynamic_parameters.DParameter;
 import edu.pdx.imagej.dynamic_parameters.HoldingParameter;
 
 @Plugin(type = DParameter.class)
-public class InterpolationParameter
+class InterpolationParameter
              extends HoldingParameter<InterpolationOptions>
 {
     public InterpolationParameter()

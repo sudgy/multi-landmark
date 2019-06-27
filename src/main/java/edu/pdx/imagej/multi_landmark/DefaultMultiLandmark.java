@@ -39,11 +39,35 @@ import org.scijava.ui.UIService;
 import mpicbg.ij.util.Util;
 import mpicbg.models.*;
 
-/**
- * This is the default implementation of the MultiLandmark Op.
+/** This is the default implementation of the MultiLandmark Op.
+ *
+ * To run this op yourself, it has the name "multi-image landmark
+ * correspondences" and has the following parameters:
+ * <ol>
+ *      <li>Images: An array of <code>ImagePlus</code> that you want to align.
+ *                  They all <strong>must</strong> have Point ROIs.
+ *      <li>Interpolation method: The method of interpolation.  The values are
+ *                                the same as in <code>ImageProcessor</code>.
+ *      <li>Model type: A <code>Class</code> of the mpicbg model you want to
+ *                      use to transform.  It must extend from <code>
+ *                      AbstractAffineModel2D</code>.
+ *      <li>Stop interpolation: A boolean for if you want to stop interpolation
+ *                              at discontinuities.  When transforming phase
+ *                              images, it is a good idea to use this.
+ *      <li>Discontinuity threshold: a float representing how big of a change
+ *                                   there must be for it to count as a
+ *                                   discontinuity.
+ *      <li>Scale to: An integer representing which image to scale to.  If it is
+ *                    -1, all images will be scaled to the biggest one.  If it
+ *                    is -2, all images will be scaled to the smallest one.  If
+ *                    it is nonnegative, it will use that value as the index
+ *                    into the images array and will scale everything to that
+ *                    image.
+ *      <li>Show matrices: A boolean for if you want to see the matrices being
+ *                         used to transform.
+ * </ol>
  *
  * @see MultiLandmark
- * @author David Cohoe
  */
 @Plugin(type = MultiLandmark.class)
 public class DefaultMultiLandmark extends AbstractOp implements MultiLandmark {

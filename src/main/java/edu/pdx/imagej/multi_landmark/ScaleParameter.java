@@ -27,7 +27,7 @@ import edu.pdx.imagej.dynamic_parameters.HoldingParameter;
 import edu.pdx.imagej.dynamic_parameters.ImageParameter;
 
 @Plugin(type = DParameter.class)
-public class ScaleParameter
+class ScaleParameter
              extends HoldingParameter<ScaleOptions>
 {
     public ScaleParameter()
