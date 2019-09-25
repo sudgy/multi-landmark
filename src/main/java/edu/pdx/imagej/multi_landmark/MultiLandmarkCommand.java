@@ -49,17 +49,17 @@ public class MultiLandmarkCommand implements Command, Initializable {
 
     @Parameter private InterpolationParameter P_interpolation;
     @Parameter private ScaleParameter         P_scale;
-    @Parameter private ChoiceParameter        P_transform_type;
-    @Parameter private BoolParameter          P_show_matrices;
+    @Parameter private ChoiceParameter        P_transformType;
+    @Parameter private BoolParameter          P_showMatrices;
     @Override
     public void initialize()
     {
         P_interpolation = new InterpolationParameter();
         P_scale         = new ScaleParameter();
         String[] choices = {"Translation", "Rigid", "Similarity", "Affine"};
-        P_transform_type = new ChoiceParameter("Transform Type", choices,
+        P_transformType = new ChoiceParameter("Transform Type", choices,
                                                "Similarity");
-        P_show_matrices = new BoolParameter("Show Transform Matrices?", false);
+        P_showMatrices = new BoolParameter("Show Transform Matrices?", false);
     }
     @Override
     public void run()
@@ -70,47 +70,47 @@ public class MultiLandmarkCommand implements Command, Initializable {
                 + "point rois", "Error");
             return;
         }
-        int final_size = 0;
+        int finalSize = 0;
         for (int id : ids) {
             Roi roi = WindowManager.getImage(id).getRoi();
             if (roi != null) {
                 if (roi instanceof PointRoi) {
-                    ++final_size;
+                    ++finalSize;
                 }
             }
         }
-        if (final_size <= 1) {
+        if (finalSize <= 1) {
             P_ui.showDialog("There must be at least two images open that have "
                 + "point rois");
             return;
         }
-        ImagePlus[] final_images = new ImagePlus[final_size];
+        ImagePlus[] finalImages = new ImagePlus[finalSize];
         int i = 0;
         for (int id : ids) {
             ImagePlus image = WindowManager.getImage(id);
             Roi roi = image.getRoi();
             if (roi != null) {
                 if (roi instanceof PointRoi) {
-                    final_images[i++] = image;
+                    finalImages[i++] = image;
                 }
             }
         }
 
-        InterpolationOptions interp = P_interpolation.get_value();
-        ScaleOptions scale = P_scale.get_value();
-        Class<? extends AbstractAffineModel2D<?>> model_type = null;
-        switch (P_transform_type.get_value()) {
+        InterpolationOptions interp = P_interpolation.getValue();
+        ScaleOptions scale = P_scale.getValue();
+        Class<? extends AbstractAffineModel2D<?>> modelType = null;
+        switch (P_transformType.getValue()) {
             case "Translation":
-                model_type = TranslationModel2D.class;
+                modelType = TranslationModel2D.class;
                 break;
             case "Rigid":
-                model_type = RigidModel2D.class;
+                modelType = RigidModel2D.class;
                 break;
             case "Similarity":
-                model_type = SimilarityModel2D.class;
+                modelType = SimilarityModel2D.class;
                 break;
             case "Affine":
-                model_type = AffineModel2D.class;
+                modelType = AffineModel2D.class;
                 break;
         }
         int to = -1;
@@ -122,8 +122,8 @@ public class MultiLandmarkCommand implements Command, Initializable {
                 to = -2;
                 break;
             case Specific:
-                for (i = 0; i < final_images.length; ++i) {
-                    if (final_images[i] == scale.specific_image) {
+                for (i = 0; i < finalImages.length; ++i) {
+                    if (finalImages[i] == scale.specificImage) {
                         to = i;
                         break;
                     }
@@ -132,13 +132,13 @@ public class MultiLandmarkCommand implements Command, Initializable {
         }
         ImagePlus[] result = (ImagePlus[])P_ops.run(
             MultiLandmark.class,
-            final_images,
+            finalImages,
             interp.type,
-            model_type,
-            interp.stop_at_discontinuity,
-            interp.discontinuity_threshold,
+            modelType,
+            interp.stopAtDiscontinuity,
+            interp.discontinuityThreshold,
             to,
-            P_show_matrices.get_value());
+            P_showMatrices.getValue());
         if (result == null) return;
         for (ImagePlus imp : result) imp.show();
     }

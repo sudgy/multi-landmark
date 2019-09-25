@@ -30,8 +30,7 @@ import edu.pdx.imagej.dynamic_parameters.DParameter;
 import edu.pdx.imagej.dynamic_parameters.HoldingParameter;
 
 @Plugin(type = DParameter.class)
-class InterpolationParameter
-             extends HoldingParameter<InterpolationOptions>
+class InterpolationParameter extends HoldingParameter<InterpolationOptions>
 {
     public InterpolationParameter()
     {
@@ -41,33 +40,35 @@ class InterpolationParameter
     public void initialize()
     {
         String[] choices = {"None", "Nearest Neighbor", "Bilinear", "Bicubic"};
-        M_type = new ChoiceParameter("Interpolation Type", choices);
-        M_stop = new BoolParameter("Suppress interpolation at discontinuities",
-                                   true);
-        M_threshold = new DoubleParameter(128.0, "Discontinuity threshold");
-        M_threshold.set_bounds(Double.MIN_VALUE, Double.MAX_VALUE);
-        add_premade_parameter(M_type);
-        add_premade_parameter(M_stop);
-        add_premade_parameter(M_threshold);
-        set_visibilities();
+        M_type = addParameter(
+            new ChoiceParameter("Interpolation Type", choices)
+        );
+        M_stop = addParameter(
+            new BoolParameter("Suppress interpolation at discontinuities", true)
+        );
+        M_threshold = addParameter(
+            new DoubleParameter(128.0, "Discontinuity threshold")
+        );
+        M_threshold.setBounds(Double.MIN_VALUE, Double.MAX_VALUE);
+        setVisibilities();
     }
     @Override
-    public void read_from_dialog()
+    public void readFromDialog()
     {
-        super.read_from_dialog();
-        set_visibilities();
+        super.readFromDialog();
+        setVisibilities();
     }
     @Override
-    public void read_from_prefs(Class<?> cls, String name)
+    public void readFromPrefs(Class<?> cls, String name)
     {
-        super.read_from_prefs(cls, name);
-        set_visibilities();
+        super.readFromPrefs(cls, name);
+        setVisibilities();
     }
     @Override
-    public InterpolationOptions get_value()
+    public InterpolationOptions getValue()
     {
         InterpolationOptions result = new InterpolationOptions();
-        switch (M_type.get_value()) {
+        switch (M_type.getValue()) {
             case "None":
                 result.type = ImageProcessor.NONE;
                 break;
@@ -81,20 +82,20 @@ class InterpolationParameter
                 result.type = ImageProcessor.BICUBIC;
                 break;
         }
-        result.stop_at_discontinuity = M_stop.get_value();
-        result.discontinuity_threshold = M_threshold.get_value();
+        result.stopAtDiscontinuity = M_stop.getValue();
+        result.discontinuityThreshold = M_threshold.getValue();
         return result;
     }
 
-    private void set_visibilities()
+    private void setVisibilities()
     {
-        if (M_type.get_value().equals("None")) {
-            M_stop.set_new_visibility(false);
-            M_threshold.set_new_visibility(false);
+        if (M_type.getValue().equals("None")) {
+            M_stop.setNewVisibility(false);
+            M_threshold.setNewVisibility(false);
         }
         else {
-            M_stop.set_new_visibility(true);
-            M_threshold.set_new_visibility(M_stop.get_value());
+            M_stop.setNewVisibility(true);
+            M_threshold.setNewVisibility(M_stop.getValue());
         }
     }
 

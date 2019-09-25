@@ -24,5 +24,5 @@ import ij.ImagePlus;
 class ScaleOptions {
     public enum To {Biggest, Smallest, Specific}
     public To to;
-    public ImagePlus specific_image;
+    public ImagePlus specificImage;
 }

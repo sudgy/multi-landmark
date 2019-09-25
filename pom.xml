@@ -7,7 +7,7 @@
 
     <groupId>edu.pdx.imagej</groupId>
     <artifactId>multi_landmark</artifactId>
-    <version>1.1</version>
+    <version>2.0</version>
 
     <name>Multi-Image Landmark Correspondences</name>
     <description>This plugin transforms any number of images based on their Point ROIs similar to the Landmark Correspondences plugin.</description>
@@ -57,7 +57,7 @@
         <dependency>
             <groupId>edu.pdx</groupId>
             <artifactId>dynamic_parameters</artifactId>
-            <version>2.2</version>
+            <version>3.0</version>
         </dependency>
     </dependencies>
     <repositories>

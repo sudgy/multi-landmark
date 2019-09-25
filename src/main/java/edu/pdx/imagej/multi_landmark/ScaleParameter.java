@@ -38,29 +38,27 @@ class ScaleParameter
     public void initialize()
     {
         String[] choices ={"Biggest Image", "Smallest Image", "Specific Image"};
-        M_to = new ChoiceParameter("Scale to...", choices);
-        M_image = new ImageParameter("Image to scale to");
-        add_premade_parameter(M_to);
-        add_premade_parameter(M_image);
-        set_visibilities();
+        M_to = addParameter(new ChoiceParameter("Scale to...", choices));
+        M_image = addParameter(new ImageParameter("Image to scale to"));
+        setVisibilities();
     }
     @Override
-    public void read_from_dialog()
+    public void readFromDialog()
     {
-        super.read_from_dialog();
-        set_visibilities();
+        super.readFromDialog();
+        setVisibilities();
     }
     @Override
-    public void read_from_prefs(Class<?> cls, String name)
+    public void readFromPrefs(Class<?> cls, String name)
     {
-        super.read_from_prefs(cls, name);
-        set_visibilities();
+        super.readFromPrefs(cls, name);
+        setVisibilities();
     }
     @Override
-    public ScaleOptions get_value()
+    public ScaleOptions getValue()
     {
         ScaleOptions result = new ScaleOptions();
-        switch (M_to.get_value()) {
+        switch (M_to.getValue()) {
             case "Biggest Image":
                 result.to = ScaleOptions.To.Biggest;
                 break;
@@ -71,13 +69,13 @@ class ScaleParameter
                 result.to = ScaleOptions.To.Specific;
                 break;
         }
-        result.specific_image = M_image.get_value();
+        result.specificImage = M_image.getValue();
         return result;
     }
 
-    private void set_visibilities()
+    private void setVisibilities()
     {
-        M_image.set_new_visibility(M_to.get_value().equals("Specific Image"));
+        M_image.setNewVisibility(M_to.getValue().equals("Specific Image"));
     }
 
     private ChoiceParameter M_to;
